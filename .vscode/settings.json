@@ -1,0 +1,11 @@
+{
+    "java.project.sourcePaths": [
+        "p5-mbta"
+    ],
+    "java.project.referencedLibraries": [
+        "lib/**/*.jar",
+        "p5-mbta/gson-2.10.1.jar",
+        "p5-mbta/hamcrest-2.2.jar",
+        "p5-mbta/junit-4.13.2.jar"
+    ]
+}

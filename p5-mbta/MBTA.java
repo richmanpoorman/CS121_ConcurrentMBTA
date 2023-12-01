@@ -3,6 +3,8 @@ import java.io.Reader;
 import java.io.FileReader;
 import java.lang.Exception;
 import java.lang.RuntimeException;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
 
 public class MBTA {
     // Keeps track of each of the passengers
@@ -35,7 +37,7 @@ public class MBTA {
         
         // Puts the "backwards" part of the path
         for (int i = stations.size() - 2; i > 0; i--)
-            stops.add(Station.make(station));
+            stops.add(Station.make(stations.get(i)));
         
         this.trainLines.put(train, stops);
         this.trainLocations.put(train, 0);
@@ -82,12 +84,12 @@ public class MBTA {
 
     // adds simulation configuration from a file
     public void loadConfig(String filename) {
-        Map<String, Map<String, List<String>>> jsonData = new HashMap<String, Map<String, String>>();
+        Map<String, Map<String, List<String>>> jsonData = new HashMap<String, Map<String, List<String>>>();
         try {
             Reader jsonFile   = new FileReader(filename);
             Gson   jsonReader = new Gson();
 
-            TypeToken<Map<String, Map<String, List<String>>>> mapType = new TypeToken<Map<String, Map<String, List<String>>>>();
+            TypeToken<Map<String, Map<String, List<String>>>> mapType = new TypeToken<Map<String, Map<String, List<String>>>>() {};
             jsonData = jsonReader.fromJson(jsonFile, mapType);
         } catch (Exception e) {
             throw new RuntimeException(e.getCause());
