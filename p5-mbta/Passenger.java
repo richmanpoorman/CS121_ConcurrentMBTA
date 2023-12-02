@@ -14,5 +14,6 @@ public class Passenger extends Entity {
         passengerPool.put(name, passenger);
         return passenger;
     }
+    
 
 }
