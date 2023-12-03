@@ -20,6 +20,7 @@ public class MBTA {
     private Map<Passenger, Queue<Station>> boardingPlans     = new HashMap<Passenger, Queue<Station>>();
     private Map<Passenger, Entity>         passengerLocation = new HashMap<Passenger, Entity>();
 
+
     // Creates an initially empty simulation
     public MBTA() { }
 
@@ -125,8 +126,9 @@ public class MBTA {
      *  Return : (Station) Returns the new station that the train is at, or null if the train can't go to the next station
      */
     public Station moveTrain(Train train) {
-        int nextStationIndex = (trainLocations.get(train) + 1) % trainLines.get(train).size();
-        Station nextStation = trainLines.get(train).get(nextStationIndex);
+            // NOTE: There is a bit of overhead, but put there for future use (if updated)
+        int     nextStationIndex = trainNextIndex(train);
+        Station nextStation      = trainNext(train);
 
         // If the next train is still there don't move
         if (stationTrains.get(nextStation) != null) return null; 
@@ -142,7 +144,7 @@ public class MBTA {
         stationTrains.put(nextStation, train);
         return nextStation;
     }
-    
+
     /* 
      *  Purpose: Gets the current station of the train
      *  Params : (Train) train := The train to check the station of
@@ -151,22 +153,56 @@ public class MBTA {
     public Station trainAt(Train train) {
         return trainLines.get(train).get(trainLocations.get(train));
     }
+    
+    /* 
+     *  Purpose: Gets the next station of the train
+     *  Params : (Train) train := The train to check the station of
+     *  Return : (Station) Returns the next station the train will go to
+     */
+    public Station trainNext(Train train) {
+        return trainLines.get(train).get(trainNextIndex(train));
+    }
+
+    /* 
+     *  Purpose: Gets the next station index of the train
+     *  Params : (Train) train := The train to check the station of
+     *  Return : (int) Returns the next station index that the train will go to
+     */
+    private int trainNextIndex(Train train) {
+        return (trainLocations.get(train) + 1) % trainLines.get(train).size();
+    }
 
     /* 
      *  Purpose: Takes a single passenger and boards the train
      *  Params : (Passenger) passenger := The passenger waiting at the station to board the train there
-     *  Return : (Train) Returns the train the passenger got on
+     *  Return : (Train) Returns the train the passenger got on, or null if there is no train to board
+     *  Notes  : Will throw an error if the passenger is not currently at a station
      */
     public Train boardTrain(Passenger passenger) {
         
         Station station = passengerAtStation(passenger);
-         // Not at a station, so something went wrong
-        if (station == null)
-            throw new RuntimeException("The passenger was not at a station");
-
+        // Not at a station, so something went wrong
+        if (station == null) throw new RuntimeException("The passenger was not at a station");
         Train train = stationTrains.get(station);
-        // If no train to board, then return null
-        if (train == null) return null;
+
+        boolean canBoard = boardTrainAtStation(passenger, train, station);
+        if (!canBoard) return null;
+        return train;
+    }
+
+    /* 
+     *  Purpose: Takes a single passenger and deboards the train
+     *  Params : (Passenger) passenger := The passenger on the station
+     *           (Train)     train     := The train the passenger is getting on
+     *           (Station)   station   := The station the passenger is boarding at
+     *  Return : (boolean) Returns whether the passenger can get on the train at the station or not
+     *  Notes  : Will throw an error if the passenger is not at a station
+     */
+    public boolean boardTrainAtStation(Passenger passenger, Train train, Station station) {
+        if (passenger == null || train == null || station == null) return false;
+        
+        // Only board if it can board the train
+        if (!canBoardTrain(passenger, train)) return false;
 
         // Add passenger to list of people on the train
         onTrainPassengers.get(train).add(passenger);
@@ -174,24 +210,47 @@ public class MBTA {
         stationPassengers.get(station).remove(passenger);
         // Put the location of the passenger to be the train
         passengerLocation.put(passenger, train);
-        return train;
+        
+        return true;
     }
 
     /* 
-     *  Purpose: Takes a single passenger and boards the train
+     *  Purpose: Takes a single passenger and deboards the train
      *  Params : (Passenger) passenger := The passenger on the train at the station
      *  Return : (Station) Returns the station the passenger got off at
+     *  Notes  : Will throw an error if the passenger is not on a train
      */
     public Station deboardTrain(Passenger passenger) {
         
         Train train = passengerOnTrain(passenger);
-         // Not on a train, so something went wrong
-        if (train == null)
-            throw new RuntimeException("The passenger was not on a train");
-
+        if (train == null) throw new RuntimeException("The passenger was not on a train");
         Station station = trainAt(train);
-        // If not at a station, then return null
-        if (station == null) return null;
+
+        boolean canDeboard = deboardTrainFromStation(passenger, train, station);
+        if (!canDeboard) return null;
+        return station;
+    }
+
+    /* 
+     *  Purpose: Takes a single passenger and deboards the train
+     *  Params : (Passenger) passenger := The passenger on the train
+     *           (Train)     train     := The train the passenger is on
+     *           (Station)   station   := The station the passenger is deboarding to
+     *  Return : (boolean) Returns whether the passenger can get off the train at the station or not
+     *  Notes  : Will throw an error if the passenger is not on a train
+     */
+    public boolean deboardTrainFromStation(Passenger passenger, Train train, Station station) {
+        if (passenger == null || train == null || station == null) return false;
+
+         // Only deboards if the station is the next destination of the passenger
+        if (station != nextDestination(passenger)) return false;
+        boardingPlans.get(passenger).remove();
+
+        // If the passenger is done, remove from the simulation
+        if (boardingPlans.get(passenger).isEmpty()) {
+            boardingPlans.remove(passenger);
+            return true;
+        }
 
         // Add passenger to list of people at the station
         stationPassengers.get(station).add(passenger);
@@ -199,7 +258,7 @@ public class MBTA {
         onTrainPassengers.get(train).remove(passenger);
         // Put the location of the passenger to be the station
         passengerLocation.put(passenger, station);
-        return station;
+        return true;
     }
 
     /* 
@@ -222,5 +281,60 @@ public class MBTA {
         if (passengerLocation.get(passenger) instanceof Train train) 
             return train;
         return null;
+    }
+
+    /* 
+     *  Purpose: Checks what the next station the passenger is trying to go to
+     *  Params : (Passenger) passenger := The passenger with the destination to investigate
+     *  Return : (Station) The next station the train is trying to go to
+     */
+    public Station nextDestination(Passenger passenger) {
+        return boardingPlans.get(passenger).peek();
+    }
+
+    /* 
+     *  Purpose: Checks if the train will take the passenger to the next station on their trip
+     *  Params : (Passenger) passenger := The passenger who is trying to the next station
+     *           (Train)     train     := The train to check if they should board
+     *  Return : (Station) The next station the train is trying to go to
+     */
+    public boolean canBoardTrain(Passenger passenger, Train train) {
+        return trainLines.get(train).contains(nextDestination(passenger));
+    }
+
+    /* 
+     *  Purpose: Gets the list of all the passengers in the MBTA system
+     *  Params : None 
+     *  Return : (List<Passenger>) A copy of the list of passengers
+     */
+    public List<Passenger> passengers() {
+        return new ArrayList<Passenger>(boardingPlans.keySet());
+    }
+
+    /* 
+     *  Purpose: Gets the list of all the stations in the MBTA system
+     *  Params : None 
+     *  Return : (List<Station>) A copy of the list of stations
+     */
+    public List<Station> stations() {
+        return new ArrayList<Station>(stationTrains.keySet());
+    }
+
+    /* 
+     *  Purpose: Gets the list of all the trains in the MBTA system
+     *  Params : None 
+     *  Return : (List<Train>) A copy of the list of trains
+     */
+    public List<Train> trains() {
+        return new ArrayList<Train>(trainLines.keySet());
+    }
+
+    /* 
+     *  Purpose: Gets if the given passenger has finished their trip on the MBTA
+     *  Params : (Passenger) passenger := The passenger to check if still riding
+     *  Return : (Lboolean) Whether the passenger is finished riding (defaults to true if the passenger was not in the system)
+     */
+    public boolean isPassengerFinished(Passenger passenger) {
+        return boardingPlans.containsKey(passenger);
     }
 }

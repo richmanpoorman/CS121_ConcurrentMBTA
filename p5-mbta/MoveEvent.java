@@ -36,9 +36,11 @@ public class MoveEvent implements Event {
                                       );
         Station nextStation = mbta.moveTrain(t);
         if (nextStation != s2) 
-            throw new RuntimeException("The next station " + 
+            throw new RuntimeException("The train " + 
+                                        (t == null ? "null" : t.toString()) + 
+                                        " has next station " + 
                                         (nextStation == null ? "null" : nextStation.toString()) + 
-                                        " was not the expected station " + 
+                                        " and was not the expected station " + 
                                         (s2 == null ? "null" : s2.toString())
                                       );
     }
