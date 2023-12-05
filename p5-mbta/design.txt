@@ -1,0 +1,24 @@
+
+Each of the stations will have a lock
+
+Each of the trains and passengers will have the lock 
+
+Each of the trains will try to aquire the lock for the next station, and await on the station if not full
+If the station is full, they will await until it is not full. 
+    Note that the trains will notify all the threads upon ENTERING the station; this means that when the train leaves,
+    all of the threads will continue to sleep
+
+Each passenger will try to aquire the lock for the station they want to get off at. 
+When they are awoken, they will attempt to try to get off of the train. 
+Then, when they are in the station, when ever they get the lock, they will try to board the 
+train that will take them. If the train is not in the station, or that train won't take them to their next destination, they sleep.
+    In other words, when in the station, passengers will try to aquire that lock. Then, when boarding the train they will try 
+    to aquire their next station's lock. 
+
+The trains will loop through trying to move to the next station (and/or awaiting when necessary) until the sim is finished
+
+The passengers will loop through getting off and getting on (and/or awaiting when necessary) until the they are finished with their journey
+
+As a final note, the locks used by the trains and passengers for each "station" will be in the MBTA simulation, as locking 
+on the stations will not allow the program to run concurrently with different simulations.
+    

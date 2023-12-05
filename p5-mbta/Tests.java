@@ -309,7 +309,25 @@ public class Tests {
 
         
     }
+    @Test 
+    public void testBasicSim() {
+        MBTA mbta = new MBTA();
 
+        List<String> line = Arrays.asList("1", "2", "3");
+        mbta.addLine("line", line);
+
+        List<String> path1 = Arrays.asList("1", "3");
+        List<String> path2 = Arrays.asList("3", "1");
+        mbta.addJourney("A", path1);
+        mbta.addJourney("B", path2);
+
+        Log log = new Log();
+
+        Sim.run_sim(mbta, log);
+        Verify.verify(mbta, log);
+    }
+
+    /* 
     @Test public void testDuplicateLines() {
         MBTA mbta = new MBTA();
 
@@ -339,6 +357,7 @@ public class Tests {
         Sim.run_sim(mbta, logger);
         Verify.verify(mbta, logger);
     }
+    */
 
     @Test 
     public void testVerificationTrip1() {

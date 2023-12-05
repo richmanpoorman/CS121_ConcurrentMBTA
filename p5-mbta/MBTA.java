@@ -5,6 +5,8 @@ import java.lang.Exception;
 import java.lang.RuntimeException;
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MBTA {
     // Keeps track of where the trains can go, where they are, and who they have
@@ -20,7 +22,7 @@ public class MBTA {
     private Map<Passenger, Queue<Station>> boardingPlans     = new HashMap<Passenger, Queue<Station>>();
     private Map<Passenger, Entity>         passengerLocation = new HashMap<Passenger, Entity>();
 
-
+    private Map<Station, Lock>             stationLocks      = new HashMap<Station, Lock>();
     // Creates an initially empty simulation
     public MBTA() { }
 
@@ -36,8 +38,11 @@ public class MBTA {
         for (String station : stations) {
             Station stop = Station.make(station);
             stops.add(stop);
-            if (!this.stationPassengers.containsKey(stop))
+            if (!this.stationPassengers.containsKey(stop)) 
                 this.stationPassengers.put(stop, new LinkedList<Passenger>());
+            
+            if (!this.stationLocks.containsKey(stop))
+                this.stationLocks.put(stop, new ReentrantLock());
         }
             
         
@@ -63,6 +68,9 @@ public class MBTA {
             stops.add(stop);
             if (!this.stationPassengers.containsKey(stop))
                 this.stationPassengers.put(stop, new LinkedList<Passenger>());
+
+            if (!this.stationLocks.containsKey(stop))
+                this.stationLocks.put(stop, new ReentrantLock());
         }
 
         Station start = stops.remove();
@@ -120,6 +128,7 @@ public class MBTA {
     }
 
     // ADDED HELPER FUNCTIONS //
+
     /* 
      *  Purpose: Moves the train to the next station
      *  Params : (Train) train := The train to move in the MBTA simulation
@@ -332,9 +341,27 @@ public class MBTA {
     /* 
      *  Purpose: Gets if the given passenger has finished their trip on the MBTA
      *  Params : (Passenger) passenger := The passenger to check if still riding
-     *  Return : (Lboolean) Whether the passenger is finished riding (defaults to true if the passenger was not in the system)
+     *  Return : (boolean) Whether the passenger is finished riding (defaults to true if the passenger was not in the system)
      */
     public boolean isPassengerFinished(Passenger passenger) {
         return boardingPlans.containsKey(passenger);
+    }
+
+    /* 
+     *  Purpose: Gets if the sim is finished running
+     *  Params : None
+     *  Return : (boolean) Whether all of the passengers have finished their trips or not
+     */
+    public boolean isSimFinished() {
+        return boardingPlans.isEmpty();
+    }
+
+    /* 
+     *  Purpose: Gets the lock of the given station
+     *  Params : (Station) station := The station to get the corresponding lock of
+     *  Return : (Lock) The lock corresponding to the given lock in the MBTA
+     */
+    public Lock getStationLock(Station station) {
+        return stationLocks.get(station);
     }
 }
