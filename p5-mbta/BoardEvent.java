@@ -22,23 +22,18 @@ public class BoardEvent implements Event {
         return List.of(p.toString(), t.toString(), s.toString());
     }
     public void replayAndCheck(MBTA mbta) {
+        if (p == null) throw new RuntimeException("The given passenger was null!");
+        if (t == null) throw new RuntimeException("The given train was null!");
+        if (s == null) throw new RuntimeException("The given station was null!");
+
         Station boardStation = mbta.passengerAtStation(p);
-        if (boardStation != s)
-            throw new RuntimeException("The passenger " + 
-                                        (p == null ? "null" : p.toString()) + 
-                                        " was not at the station " + 
-                                        (boardStation == null ? "null" : boardStation.toString()) + 
-                                        " and not the expected station " + 
-                                        (s == null ? "null" : s.toString())
-                                       );
+
+        if (boardStation == null) throw new RuntimeException("The passenger " + p + " failed to exit the station " + s + " to train " + t);
+        if (boardStation != s) throw new RuntimeException("The passenger " + p + " exited the station " + boardStation + " instead of station " + s);
+        
         Train boardedTrain = mbta.boardTrain(p);
-        if (boardedTrain != t)
-            throw new RuntimeException("The passenger " + 
-                                        (p == null ? "null" : p.toString()) + 
-                                        " boarded the train " + 
-                                        (boardedTrain == null ? "null" : boardedTrain.toString()) + 
-                                        " did not board the expected train " + 
-                                        (t == null ? "null" : t.toString())
-                                      );
+
+        if (boardedTrain == null) throw new RuntimeException("The passenger " + p + " could not board the train " + t + " at station " + s);
+        if (boardedTrain != t) throw new RuntimeException("The passenger " + p + " boarded the train " + boardedTrain + " instead of the train " + t);
     }
 }

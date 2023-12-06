@@ -309,56 +309,7 @@ public class Tests {
 
         
     }
-    @Test 
-    public void testBasicSim() {
-        MBTA mbta = new MBTA();
-
-        List<String> line = Arrays.asList("1", "2", "3");
-        mbta.addLine("line", line);
-
-        List<String> path1 = Arrays.asList("1", "3");
-        List<String> path2 = Arrays.asList("3", "1");
-        mbta.addJourney("A", path1);
-        mbta.addJourney("B", path2);
-
-        Log log = new Log();
-
-        Sim.run_sim(mbta, log);
-        Verify.verify(mbta, log);
-    }
-
-    /* 
-    @Test public void testDuplicateLines() {
-        MBTA mbta = new MBTA();
-
-        List<String> lineA = Arrays.asList("1", "2", "4", "6");
-        List<String> lineB = Arrays.asList("1", "3", "5");
-        List<String> lineC = Arrays.asList("5", "7");
-        List<String> lineD = Arrays.asList("1", "2", "3", "4");
-
-        mbta.addLine("a", lineA);
-        mbta.addLine("b", lineB);
-        mbta.addLine("c", lineC); 
-        mbta.addLine("d", lineD);
-
-        List<String> lineBPassenger       = Arrays.asList("1", "5");                     // Only 1 path
-        List<String> lineAOrDPassenger    = Arrays.asList("1", "4");                     // Multiple paths
-        List<String> lineBToCPassenger    = Arrays.asList("1", "5", "7");                // Transfer between trains
-        List<String> longPathPassenger    = Arrays.asList("7", "5", "3", "1", "4", "6"); // Multiple transfers with multiple path
-        List<String> backToStartPassenger = Arrays.asList("4", "1");                     // Go in reverse to start
-
-        mbta.addJourney("Line B Passenger"       , lineBPassenger);
-        mbta.addJourney("Line A Or D Passenger"  , lineAOrDPassenger);
-        mbta.addJourney("Line B To C Passenger"  , lineBToCPassenger);
-        mbta.addJourney("Long Path Passenger"    , longPathPassenger);
-        mbta.addJourney("Back To Start Passenger", backToStartPassenger);
-
-        Log logger = new Log();
-        Sim.run_sim(mbta, logger);
-        Verify.verify(mbta, logger);
-    }
-    */
-
+    
     @Test 
     public void testVerificationTrip1() {
       MBTA mbta = new MBTA();
@@ -395,5 +346,68 @@ public class Tests {
       Log e = new Log(events);
 
       Verify.verify(mbta, e);
+    }
+
+    @Test 
+    public void testBasicSim() {
+        MBTA mbta = new MBTA();
+
+        List<String> line = Arrays.asList("1", "2", "3");
+        mbta.addLine("line", line);
+
+        List<String> path1 = Arrays.asList("1", "3");
+        List<String> path2 = Arrays.asList("3", "1");
+        mbta.addJourney("A", path1);
+        mbta.addJourney("B", path2);
+
+        Log log = new Log();
+
+        Sim.run_sim(mbta, log);
+
+        mbta.reset();
+        mbta.addLine("line", line);
+        mbta.addJourney("A", path1);
+        mbta.addJourney("B", path2);
+        Verify.verify(mbta, log);
+    }
+
+    @Test 
+    public void completeCircle() {
+
+        List<String> line1 = Arrays.asList("1", "2", "3", "4", "5");
+        List<String> line2 = Arrays.asList("2", "3", "4", "5", "1");
+        List<String> line3 = Arrays.asList("3", "4", "5", "1", "2");
+        List<String> line4 = Arrays.asList("4", "5", "1", "2", "3");
+
+        List<String> path1 = Arrays.asList("1", "5");
+        List<String> path2 = Arrays.asList("2", "1");
+        List<String> path3 = Arrays.asList("3", "2");
+        List<String> path4 = Arrays.asList("4", "3");
+
+        MBTA mbta = new MBTA();
+        mbta.addLine("Line 1", line1);
+        mbta.addLine("Line 2", line2);
+        mbta.addLine("Line 3", line3);
+        mbta.addLine("Line 4", line4);
+
+        mbta.addJourney("A", path1);
+        mbta.addJourney("B", path2);
+        mbta.addJourney("C", path3);
+        mbta.addJourney("D", path4);
+
+        Log log = new Log();
+        Sim.run_sim(mbta, log);
+
+        mbta.reset();
+        mbta.addLine("Line 1", line1);
+        mbta.addLine("Line 2", line2);
+        mbta.addLine("Line 3", line3);
+        mbta.addLine("Line 4", line4);
+
+        mbta.addJourney("A", path1);
+        mbta.addJourney("B", path2);
+        mbta.addJourney("C", path3);
+        mbta.addJourney("D", path4);
+        Verify.verify(mbta, log);
     }
 }

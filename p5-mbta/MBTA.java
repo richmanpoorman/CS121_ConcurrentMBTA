@@ -140,7 +140,7 @@ public class MBTA {
         Station nextStation      = trainNext(train);
 
         // If the next train is still there don't move
-        if (stationTrains.get(nextStation) != null) return null; 
+        if (!canMoveToNextStation(train)) return null; 
 
         // Leave the old station 
         Station oldStation = this.trainAt(train);
@@ -152,6 +152,15 @@ public class MBTA {
         // Enter the new station
         stationTrains.put(nextStation, train);
         return nextStation;
+    }
+
+    /* 
+     *  Purpose: Gets if the next station is open
+     *  Params : (Train) train := The train to check the next station of
+     *  Return : (boolean) Returns whether the next station is open
+     */
+    public boolean canMoveToNextStation(Train train) {
+        return stationTrains.get(trainNext(train)) == null;
     }
 
     /* 
@@ -305,9 +314,10 @@ public class MBTA {
      *  Purpose: Checks if the train will take the passenger to the next station on their trip
      *  Params : (Passenger) passenger := The passenger who is trying to the next station
      *           (Train)     train     := The train to check if they should board
-     *  Return : (Station) The next station the train is trying to go to
+     *  Return : (Station) The next station the train is trying to go to, or null if the train is null
      */
     public boolean canBoardTrain(Passenger passenger, Train train) {
+        if (train == null) return false;
         return trainLines.get(train).contains(nextDestination(passenger));
     }
 
@@ -344,7 +354,7 @@ public class MBTA {
      *  Return : (boolean) Whether the passenger is finished riding (defaults to true if the passenger was not in the system)
      */
     public boolean isPassengerFinished(Passenger passenger) {
-        return boardingPlans.containsKey(passenger);
+        return !boardingPlans.containsKey(passenger);
     }
 
     /* 

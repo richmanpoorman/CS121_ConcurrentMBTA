@@ -1,4 +1,6 @@
 import java.util.concurrent.locks.Lock;
+import java.lang.Exception;
+import java.lang.RuntimeException;
 
 public class PassengerThread extends Thread {
     Passenger passenger;
@@ -12,7 +14,9 @@ public class PassengerThread extends Thread {
     }
 
     public void run() {
+        
         while (!mbta.isPassengerFinished(passenger)) {
+            
             // Waiting for train to board //
             Station currStation = mbta.passengerAtStation(passenger);
 
@@ -22,35 +26,33 @@ public class PassengerThread extends Thread {
                 // Wait until it can board the train
                 Train boardTrain = mbta.boardTrain(passenger);
                 while (boardTrain == null) { 
-                    try {
-                        // currStationLock.wait(); 
-                        currStation.wait();
-                    } catch (Exception e) { }
+                    waitFor(currStation);
                     boardTrain = mbta.boardTrain(passenger);
                 }
-
                 log.passenger_boards(passenger, boardTrain, currStation);
             }
 
             // Getting off of the train // 
             Station nextStation = mbta.nextDestination(passenger);
-
+            Train   onTrain     = mbta.passengerOnTrain(passenger);
             // Lock nextStationLock = mbta.getStationLock(nextStation);
-
+            
             synchronized(nextStation) { // nextStationLock) {
                 // Wait until it can board the train
-                Train   onTrain        = mbta.passengerOnTrain(passenger);
                 Station deboardStation = mbta.deboardTrain(passenger);
                 while (deboardStation == null) { 
-                    try {
-                        // nextStationLock.wait(); 
-                        nextStation.wait();
-                    } catch (Exception e) { }
+                    waitFor(nextStation);
                     deboardStation = mbta.deboardTrain(passenger);
                 }
 
-                log.passenger_deboards(passenger, onTrain, deboardStation);
+                log.passenger_deboards(passenger, onTrain, nextStation);
             }
         }
+    }
+
+    private void waitFor(Object lock) {
+        try {
+            lock.wait();
+        } catch (Exception e) { throw new RuntimeException(e.getMessage()); }
     }
 }

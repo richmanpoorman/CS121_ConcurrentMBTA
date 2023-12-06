@@ -15,13 +15,13 @@ public class Sim {
         for (Passenger passenger : passengers) {
             PassengerThread thread = new PassengerThread(passenger, mbta, log);
             passengerThreads.add(thread);
-            thread.run();
+            thread.start();
         }
 
         for (Train train : trains) {
             TrainThread thread = new TrainThread(train, mbta, log);
             trainThreads.add(thread);
-            thread.run();
+            thread.start();
         }
 
         try {

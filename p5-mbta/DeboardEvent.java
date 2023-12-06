@@ -22,23 +22,18 @@ public class DeboardEvent implements Event {
         return List.of(p.toString(), t.toString(), s.toString());
     }
     public void replayAndCheck(MBTA mbta) {
+        if (p == null) throw new RuntimeException("The given passenger was null!");
+        if (t == null) throw new RuntimeException("The given train was null!");
+        if (s == null) throw new RuntimeException("The given station was null!");
+
         Train deboardTrain = mbta.passengerOnTrain(p);
-        if (deboardTrain != t)
-            throw new RuntimeException("The passenger " + 
-                                        (p == null ? "null" : p.toString()) + 
-                                        " was on the train " + 
-                                        (deboardTrain == null ? "null" : deboardTrain.toString()) + 
-                                        " not on the expected train " + 
-                                        (t == null ? "null" : t.toString())
-                                      );
+
+        if (deboardTrain == null) throw new RuntimeException("The passenger " + p + " could not deboard from train " + t + " at station " + s);
+        if (deboardTrain != t) throw new RuntimeException("The passenger " + p + " deboarded from train " + deboardTrain + " instead of train " + t);
+
         Station deboardedStation = mbta.deboardTrain(p);
-        if (deboardedStation != s)
-            throw new RuntimeException("The passenger " + 
-                                        (p == null ? "null" : p.toString()) + 
-                                        " was at the station " + 
-                                        (deboardedStation == null ? "null" : deboardedStation.toString()) + 
-                                        " and did not enter the expected station " + 
-                                        (s == null ? "null" : s.toString())
-                                      );
+
+        if (deboardedStation == null) throw new RuntimeException("The passenger " + p + " failed to enter the station " + s + " from train " + t);
+        if (deboardedStation != s) throw new RuntimeException("The passenger " + p + " entered the station " + deboardedStation + " instead of station " + s);
     }
 }

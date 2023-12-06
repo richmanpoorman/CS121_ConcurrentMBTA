@@ -25,23 +25,19 @@ public class MoveEvent implements Event {
 
     // Checks if the move event can actually occur on this MBTA
     public void replayAndCheck(MBTA mbta) {
+        if (t == null) throw new RuntimeException("The given train was null!");
+        if (s1 == null) throw new RuntimeException("The given start station was null!");
+        if (s2 == null) throw new RuntimeException("The given end station was null!");
+
         Station currentStation = mbta.trainAt(t);
-        if (currentStation != s1) 
-            throw new RuntimeException("The train " + 
-                                        (t == null ? "null" : t.toString()) + 
-                                        " was at station " + 
-                                        (currentStation == null ? "null" : currentStation.toString()) + 
-                                        " and not the correct station " + 
-                                        (s1 == null ? "null" : s1.toString())
-                                      );
+
+        if (currentStation == null) throw new RuntimeException("The train " + t + " does not start at station " + s1 + " going to station " + s2);
+        if (currentStation != s1) throw new RuntimeException("The train " + t + " starts at station " + currentStation + " not station " + s1 + " going to station " + s2);
+
         Station nextStation = mbta.moveTrain(t);
-        if (nextStation != s2) 
-            throw new RuntimeException("The train " + 
-                                        (t == null ? "null" : t.toString()) + 
-                                        " has next station " + 
-                                        (nextStation == null ? "null" : nextStation.toString()) + 
-                                        " and was not the expected station " + 
-                                        (s2 == null ? "null" : s2.toString())
-                                      );
+
+        if (nextStation == null) throw new RuntimeException("The train " + t + " could not go to station " + s2 + " from station " + s1);
+        if (nextStation != s2) throw new RuntimeException("The train " + t + " went to station " + nextStation + " instead of station " + s2 + " from station " + s1);
+        
     }
 }
