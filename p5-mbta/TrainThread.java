@@ -26,25 +26,27 @@ public class TrainThread extends Thread {
 
                 // Move to the next station when open
                 while (mbta.moveTrain(train) == null) {
-                    System.out.println(train + " could not move");
+                    if (mbta.isSimFinished()) return;
+                    System.out.println(train + " could not move to " + nextStation + " from " + currStation);
                     waitFor(nextStation);
                 }
                 
                 // Then, log moving to the next station
                 log.train_moves(train, currStation, nextStation);
-
+                
                 // Then alert the arrived at station that there was a change
                 // nextStationLock.notifyAll();
                 nextStation.notifyAll();
 
-                
+                // Sleep for 10 ms
+                sleepFor(TIME);
+
+                // Let the current station know that they can actually come in
+                synchronized(currStation) {
+                    currStation.notifyAll();
+                }
             }
-            // Sleep for 10 ms
-            sleepFor(TIME);
-            // Let the current station know that they can actually come in
-            synchronized(currStation) {
-                currStation.notifyAll();
-            }
+            
             
         }   
     }
