@@ -8,6 +8,7 @@ public class Sim {
     public static void run_sim(MBTA mbta, Log log) {
         List<Passenger> passengers = mbta.passengers();
         List<Train>     trains     = mbta.trains();
+        List<Station>   stations   = mbta.stations();
 
         List<PassengerThread> passengerThreads = new ArrayList<PassengerThread>();
         List<TrainThread>     trainThreads     = new ArrayList<TrainThread>();
@@ -28,9 +29,15 @@ public class Sim {
             for (PassengerThread thread : passengerThreads) 
                 thread.join();
             
+            for (Station station : stations) {
+                synchronized(station) {
+                    station.notifyAll();
+                }
+            }
+
             for (TrainThread thread : trainThreads)
                 thread.join();
-        } catch (Exception e) { } 
+        } catch (Exception e) { throw new RuntimeException(e.getMessage()); } 
         
     }
 

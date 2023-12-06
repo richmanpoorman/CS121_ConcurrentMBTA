@@ -371,7 +371,7 @@ public class MBTA {
      *  Params : (Station) station := The station to get the corresponding lock of
      *  Return : (Lock) The lock corresponding to the given lock in the MBTA
      */
-    public Lock getStationLock(Station station) {
+    public Object getStationLock(Station station) {
         return stationLocks.get(station);
     }
 }

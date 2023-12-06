@@ -20,32 +20,36 @@ public class PassengerThread extends Thread {
             // Waiting for train to board //
             Station currStation = mbta.passengerAtStation(passenger);
 
-            // Lock currStationLock = mbta.getStationLock(currStation);
+            Object currStationLock = mbta.getStationLock(currStation);
 
-            synchronized(currStation) { // currStationLock) {
+            synchronized(currStationLock) { // currStationLock) {
                 // Wait until it can board the train
                 Train boardTrain = mbta.boardTrain(passenger);
                 while (boardTrain == null) { 
-                    waitFor(currStation);
+                    waitFor(currStationLock);
                     boardTrain = mbta.boardTrain(passenger);
                 }
                 log.passenger_boards(passenger, boardTrain, currStation);
+
+                currStationLock.notifyAll();
             }
 
             // Getting off of the train // 
             Station nextStation = mbta.nextDestination(passenger);
             Train   onTrain     = mbta.passengerOnTrain(passenger);
-            // Lock nextStationLock = mbta.getStationLock(nextStation);
+            Object  nextStationLock = mbta.getStationLock(nextStation);
             
-            synchronized(nextStation) { // nextStationLock) {
+            synchronized(nextStationLock) { // nextStationLock) {
                 // Wait until it can board the train
                 Station deboardStation = mbta.deboardTrain(passenger);
                 while (deboardStation == null) { 
-                    waitFor(nextStation);
+                    waitFor(nextStationLock);
                     deboardStation = mbta.deboardTrain(passenger);
                 }
 
                 log.passenger_deboards(passenger, onTrain, nextStation);
+
+                nextStationLock.notifyAll();
             }
         }
     }

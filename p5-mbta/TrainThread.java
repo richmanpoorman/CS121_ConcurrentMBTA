@@ -21,33 +21,33 @@ public class TrainThread extends Thread {
             Station currStation = mbta.trainAt(train);
             Station nextStation = mbta.trainNext(train);
 
-            // Lock nextStationLock = mbta.getStationLock(nextStation);
-            synchronized(nextStation) { // nextStationLock) {
+            Object nextStationLock = mbta.getStationLock(nextStation);
+            Object currStationLock = mbta.getStationLock(currStation);
+            synchronized(nextStationLock) { // nextStationLock) {
+                synchronized(currStationLock) {
+                    // Move to the next station when open
+                    while (mbta.moveTrain(train) == null) {
+                        if (mbta.isSimFinished()) return;
+                        // System.out.println(train + " could not move to " + nextStation + " from " + currStation);
+                        waitFor(nextStationLock);
+                    }
+                    
+                    // Then, log moving to the next station
+                    log.train_moves(train, currStation, nextStation);
+                    
+                    // Then alert the arrived at station that there was a change
+                    // nextStationLock.notifyAll();
+                    nextStationLock.notifyAll();
 
-                // Move to the next station when open
-                while (mbta.moveTrain(train) == null) {
-                    if (mbta.isSimFinished()) return;
-                    System.out.println(train + " could not move to " + nextStation + " from " + currStation);
-                    waitFor(nextStation);
-                }
-                
-                // Then, log moving to the next station
-                log.train_moves(train, currStation, nextStation);
-                
-                // Then alert the arrived at station that there was a change
-                // nextStationLock.notifyAll();
-                nextStation.notifyAll();
+                    // Let the current station know that they can actually come in
+                    currStationLock.notifyAll();
 
-                // Sleep for 10 ms
-                sleepFor(TIME);
-
-                // Let the current station know that they can actually come in
-                synchronized(currStation) {
-                    currStation.notifyAll();
+                    
                 }
             }
             
-            
+            // Sleep for 10 ms
+            sleepFor(TIME);
         }   
     }
 
