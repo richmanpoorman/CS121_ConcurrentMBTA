@@ -24,13 +24,14 @@ public class TrainThread extends Thread {
             Object nextStationLock = mbta.getStationLock(nextStation);
             Object currStationLock = mbta.getStationLock(currStation);
             synchronized(nextStationLock) { // nextStationLock) {
-                synchronized(currStationLock) {
-                    // Move to the next station when open
-                    while (mbta.moveTrain(train) == null) {
-                        if (mbta.isSimFinished()) return;
+                while (!mbta.canMoveToNextStation(train)) {
+                    if (mbta.isSimFinished()) return;
                         // System.out.println(train + " could not move to " + nextStation + " from " + currStation);
                         waitFor(nextStationLock);
-                    }
+                }
+                synchronized(currStationLock) {
+                    // Move to the next station when open
+                    mbta.moveTrain(train);
                     
                     // Then, log moving to the next station
                     log.train_moves(train, currStation, nextStation);

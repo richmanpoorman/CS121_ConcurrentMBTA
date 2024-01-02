@@ -21,6 +21,7 @@ public class MBTA {
     // Keeps track of what the next station to go to is and where the passenger is
     private Map<Passenger, Queue<Station>> boardingPlans     = new HashMap<Passenger, Queue<Station>>();
     private Map<Passenger, Entity>         passengerLocation = new HashMap<Passenger, Entity>();
+    private Map<Passenger, List<Station>>  allPlans          = new HashMap<Passenger, List<Station>>();
 
     private Map<Station, Lock>             stationLocks      = new HashMap<Station, Lock>();
     // Creates an initially empty simulation
@@ -61,11 +62,13 @@ public class MBTA {
     public void addJourney(String name, List<String> stations) {
         Passenger passenger = Passenger.make(name);
 
-        Queue<Station> stops = new LinkedList<Station>();
+        Queue<Station> stops    = new LinkedList<Station>();
+        List<Station>  allStops = new ArrayList<Station>();
         // Puts the "forwards" part of the path 
         for (String station : stations) {
             Station stop = Station.make(station);
             stops.add(stop);
+            allStops.add(stop);
             if (!this.stationPassengers.containsKey(stop))
                 this.stationPassengers.put(stop, new LinkedList<Passenger>());
 
@@ -78,17 +81,37 @@ public class MBTA {
         this.stationPassengers.get(start).add(passenger);
 
         this.boardingPlans.put(passenger, stops);
+        this.allPlans.put(passenger, allStops);
         this.passengerLocation.put(passenger, start);
     }
 
     // Return normally if initial simulation conditions are satisfied, otherwise
     // raises an exception
     public void checkStart() {
+        List<Train> trains = trains();
+        for (Train train : trains) {
+            if (!trainLocations.containsKey(train) || !trainLines.containsKey(train) || !onTrainPassengers.containsKey(train))
+                throw new RuntimeException("Train " + train + " does not exist");
+            if (trainLocations.get(train) != 0) 
+                throw new RuntimeException("Train " + train + " did not start at index 0");
+            if (trainAt(train) != trainLines.get(train).get(0))
+                throw new RuntimeException("Train  " + train + " station is not the same as the first station");
+        }
+
+        List<Passenger> passengers = passengers();
+        for (Passenger passenger : passengers) {
+            if (!allPlans.containsKey(passenger) || !boardingPlans.containsKey(passenger) || !passengerLocation.containsKey(passenger))
+                throw new RuntimeException("Passenger " + passenger + " does not exist");
+            if (passengerAtStation(passenger) != allPlans.get(passenger).get(0))
+                throw new RuntimeException("Passenger " + passenger + " was not at the first station");
+        }
     }
 
     // Return normally if final simulation conditions are satisfied, otherwise
     // raises an exception
     public void checkEnd() {
+        if (!boardingPlans.isEmpty()) 
+            throw new RuntimeException("Not all passengers have gotten off of the train stations");
     }
 
     // reset to an empty simulation
@@ -100,6 +123,7 @@ public class MBTA {
         boardingPlans.clear();
         stationTrains.clear();
         passengerLocation.clear();
+        allPlans.clear();
     }
 
     // adds simulation configuration from a file
@@ -110,7 +134,7 @@ public class MBTA {
             Gson   jsonReader = new Gson();
 
             TypeToken<Map<String, Map<String, List<String>>>> mapType = new TypeToken<Map<String, Map<String, List<String>>>>() {};
-            jsonData = jsonReader.fromJson(jsonFile, mapType);
+            jsonData = jsonReader.fromJson(jsonFile, mapType.getType());
         } catch (Exception e) {
             throw new RuntimeException(e.getCause());
         }

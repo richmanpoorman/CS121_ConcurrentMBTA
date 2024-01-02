@@ -30,8 +30,9 @@ public class Sim {
                 thread.join();
             
             for (Station station : stations) {
-                synchronized(station) {
-                    station.notifyAll();
+                Object stationLock = mbta.getStationLock(station);
+                synchronized(stationLock) {
+                    stationLock.notifyAll();
                 }
             }
 

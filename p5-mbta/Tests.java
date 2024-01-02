@@ -115,7 +115,9 @@ public class Tests {
         
         log.passenger_boards(bob, rLine, davis);
         log.train_moves(rLine, davis, harvard);
-        
+        log.train_moves(rLine, harvard, kendall);
+        log.passenger_deboards(bob, rLine, kendall);
+
         Verify.verify(mbta, log);
     }
     @Test
@@ -182,7 +184,17 @@ public class Tests {
         
         log.passenger_boards(john_doe, orangeLine, forest_hills);
         log.train_moves(orangeLine, forest_hills, green_st);
-        
+        log.train_moves(orangeLine, green_st, stony_brook);
+        log.train_moves(orangeLine, stony_brook, jackson_sq);
+        log.passenger_deboards(john_doe, orangeLine, jackson_sq);
+        log.train_moves(orangeLine, jackson_sq, roxbury_xing);
+
+        mbta.reset();
+        mbta.addLine("Orange", 
+            List.of("Forest Hills", "Green Street", "Stony Brook", 
+            "Jackson Square", "Roxbury Crossing"));
+        mbta.addJourney("jd1", List.of("Forest Hills", "Jackson Square"));
+
         Verify.verify(mbta, log);
     }
 
